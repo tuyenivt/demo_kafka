@@ -5,6 +5,8 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.concurrent.ExecutionException;
+
 public class AppTests {
 
 	private App app = new App("localhost:9092");
@@ -17,6 +19,11 @@ public class AppTests {
 	@Test
 	public void produceMessageWithCallback() {
 		app.produceMessageWithCallback("first_topic", "hello world and callback");
+	}
+
+	@Test
+	public void produceMessageKey() throws ExecutionException, InterruptedException {
+		app.produceMessageKey("first_topic", "hello world and key");
 	}
 
 }
