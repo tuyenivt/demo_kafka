@@ -14,4 +14,9 @@ public class AppTests {
 		app.produceMessage("first_topic", "hello world");
 	}
 
+	@Test
+	public void produceMessageWithCallback() {
+		app.produceMessageWithCallback("first_topic", "hello world and callback");
+	}
+
 }
