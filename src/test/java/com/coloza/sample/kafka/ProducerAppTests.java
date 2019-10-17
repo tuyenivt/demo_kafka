@@ -1,15 +1,12 @@
 package com.coloza.sample.kafka;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.concurrent.ExecutionException;
 
-public class AppTests {
+public class ProducerAppTests {
 
-	private App app = new App("localhost:9092");
+	private ProducerApp app = new ProducerApp("localhost:9092");
 
 	@Test
 	public void produceMessage() {

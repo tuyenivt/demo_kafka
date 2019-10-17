@@ -5,16 +5,15 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
-public class App {
+public class ProducerApp {
 
     private String bootstrapServer;
-    private Logger log = LoggerFactory.getLogger(App.class);
+    private Logger log = LoggerFactory.getLogger(ProducerApp.class);
 
-    public App(String bootstrapServer) {
+    public ProducerApp(String bootstrapServer) {
         this.bootstrapServer = bootstrapServer;
     }
 
