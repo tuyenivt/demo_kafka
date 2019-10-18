@@ -17,4 +17,9 @@ public class ConsumerAppTests {
 	public void consumeMessageWithThread() {
 		app.consumeMessageWithThread(Arrays.asList("first_topic"));
 	}
+
+	@Test
+	public void consumeMessageAssignAndSeek() {
+		app.consumeMessageAssignAndSeek("first_topic", 10, 5);
+	}
 }

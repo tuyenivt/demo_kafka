@@ -1,15 +1,18 @@
 package com.coloza.sample.kafka;
 
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 
 public class ConsumerApp {
 
@@ -135,6 +138,42 @@ public class ConsumerApp {
             // it will throw exception WakeupException
             consumer.wakeup();
         }
+    }
+
+    public void consumeMessageAssignAndSeek(String topic, long offsetToReadFrom, int numberOfMessagesToRead) {
+        Properties properties = this.createConsumerProperties();
+        // this don't need the group_id
+        properties.remove(ConsumerConfig.GROUP_ID_CONFIG);
+        // create consumer
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(this.createConsumerProperties());
+
+        // assign and seek are mostly used to replay data or fetch a specific message
+
+        // assign
+        TopicPartition partitionToReadFrom = new TopicPartition(topic, 0);
+        consumer.assign(Arrays.asList(partitionToReadFrom));
+
+        // seek
+        consumer.seek(partitionToReadFrom, offsetToReadFrom);
+
+        boolean isKeepReading = true;
+        int numberOfMessagesReadSoFar = 0;
+
+        // poll new data
+        while (isKeepReading) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                log.info("Key: " + record.key() + ", Value: " + record.value(),
+                        ", Partition: " + record.partition() + ", Offset: " + record.offset());
+                numberOfMessagesReadSoFar++;
+                if (numberOfMessagesReadSoFar >= numberOfMessagesToRead) {
+                    isKeepReading = false; // stop reading
+                    break; // exist while loop
+                }
+            }
+        }
+
+        log.info("Exiting the application");
     }
 
 }
