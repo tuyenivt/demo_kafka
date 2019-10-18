@@ -13,4 +13,8 @@ public class ConsumerAppTests {
 		app.consumeMessage(Arrays.asList("first_topic"));
 	}
 
+	@Test
+	public void consumeMessageWithThread() {
+		app.consumeMessageWithThread(Arrays.asList("first_topic"));
+	}
 }

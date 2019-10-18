@@ -1,6 +1,7 @@
 package com.coloza.sample.kafka;
 
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 
 public class ConsumerApp {
 
@@ -44,6 +46,94 @@ public class ConsumerApp {
                 log.info("Key: " + record.key() + ", Value: " + record.value(),
                         ", Partition: " + record.partition() + ", Offset: " + record.offset());
             }
+        }
+    }
+
+    public void consumeMessageWithThread(List<String> topics) {
+        // latch for dealing with multiple thread
+        CountDownLatch latch = new CountDownLatch(1);
+
+        // create consumer runnable
+        log.info("Creating the consumer thread");
+        Runnable consumerRunnable = new ConsumerRunnable(
+                this.bootstrapServer,
+                this.createConsumerProperties(),
+                this.groupId,
+                topics,
+                latch);
+
+        // start the thread
+        Thread thread = new Thread(consumerRunnable);
+        thread.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Caught shutdown hook");
+            ((ConsumerRunnable) consumerRunnable).shutdown();
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            log.info("Application has exited");
+        }));
+
+        // add a shutdown hook
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            log.error("Application got interrupted: ", e);
+        } finally {
+            log.info("Application is closing");
+        }
+    }
+
+    public class ConsumerRunnable implements Runnable {
+
+        private Logger log = LoggerFactory.getLogger(ConsumerRunnable.class);
+        private CountDownLatch latch;
+        private KafkaConsumer<String, String> consumer;
+        private String bootstrapServer;
+        private String groupId;
+
+        public ConsumerRunnable(String bootstrapServer,
+                                Properties properties,
+                                String groupId,
+                                List<String> topics,
+                                CountDownLatch latch) {
+            this.latch = latch;
+            this.bootstrapServer = bootstrapServer;
+            this.groupId = groupId;
+            // create consumer
+            consumer = new KafkaConsumer<>(properties);
+            // subscribe consumer to our topic(s)
+            consumer.subscribe(topics);
+        }
+
+        @Override
+        public void run() {
+            // poll new data
+            try {
+                while (true) {
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                    for (ConsumerRecord<String, String> record : records) {
+                        log.info("Key: " + record.key() + ", Value: " + record.value(),
+                                ", Partition: " + record.partition() + ", Offset: " + record.offset());
+                    }
+                }
+            } catch (WakeupException e) {
+                log.info("Received shutdown signal!");
+            } finally {
+                consumer.close();
+                // tell our main code we're done with the consumer
+                latch.countDown();
+            }
+        }
+
+        public void shutdown() {
+            // the wakeup() method is a special method to interrupt consumer.poll()
+            // it will throw exception WakeupException
+            consumer.wakeup();
         }
     }
 
