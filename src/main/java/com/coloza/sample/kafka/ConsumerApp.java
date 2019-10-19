@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
 
 public class ConsumerApp {
 
