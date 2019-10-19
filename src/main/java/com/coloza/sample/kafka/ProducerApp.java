@@ -103,4 +103,23 @@ public class ProducerApp {
         producer.close();
     }
 
+    public void produceMessageWithSafeProducer(String topic, String message) {
+        Properties properties = this.createProducerProperties();
+        properties.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
+        properties.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
+        properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5"); // kafka >= 1.0
+
+        // create producer
+        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
+
+        // create a producer record
+        ProducerRecord<String, String> record = new ProducerRecord<>(topic, message);
+
+        // send data
+        producer.send(record);
+
+        producer.flush();
+        producer.close();
+    }
 }

@@ -23,4 +23,9 @@ public class ProducerAppTests {
 		app.produceMessageKey("first_topic", "hello world and key");
 	}
 
+	@Test
+	public void produceMessageWithSafeProducer() {
+		app.produceMessageWithSafeProducer("first_topic", "hello world, i'm safe");
+	}
+
 }
