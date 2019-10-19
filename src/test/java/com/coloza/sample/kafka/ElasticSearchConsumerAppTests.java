@@ -23,4 +23,9 @@ public class ElasticSearchConsumerAppTests {
     public void consumeMessageAndInsertToElasticSearchTest() throws IOException {
         app.consumeMessageAndInsertToElasticSearch(Arrays.asList("twitter_tweets"), "twitter", "tweets");
     }
+
+    @Test
+    public void consumeMessageAndInsertToElasticSearchUsingBatchTest() throws IOException {
+        app.consumeMessageAndInsertToElasticSearchUsingBatch(Arrays.asList("twitter_tweets"), "twitter", "tweets");
+    }
 }

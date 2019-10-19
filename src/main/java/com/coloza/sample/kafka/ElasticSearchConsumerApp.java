@@ -8,6 +8,8 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -23,6 +25,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ElasticSearchConsumerApp {
 
@@ -101,6 +105,39 @@ public class ElasticSearchConsumerApp {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    public void consumeMessageAndInsertToElasticSearchUsingBatch(List<String> topics, String index, String type) throws IOException {
+        RestHighLevelClient client = this.createClient();
+
+        Properties properties = this.createConsumerProperties();
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // disable auto commit of offsets
+        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
+        // create consumer
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+
+        // subscribe consumer to our topic(s)
+        consumer.subscribe(topics);
+
+        // poll new data and insert into Elastic Search
+        for (int i = 0; i < 10; i++) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            int recordCount = records.count();
+            log.info("Received " + recordCount + " records");
+            BulkRequest bulkRequest = new BulkRequest();
+            for (ConsumerRecord<String, String> record : records) {
+                IndexRequest indexRequest = new IndexRequest(index, type).source(record.value(), XContentType.JSON);
+                bulkRequest.add(indexRequest); // we add this request to our bulk request (take no time)
+            }
+            if (recordCount > 0) {
+                BulkResponse bulkResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+                log.info("Committing offsets...");
+                consumer.commitSync();
+                log.info("Offsets have bean committed");
+                String ids = Stream.of(bulkResponse.getItems()).map(x -> x.getId()).collect(Collectors.joining(","));
+                log.info("indexed messages with ids " + ids);
             }
         }
     }
