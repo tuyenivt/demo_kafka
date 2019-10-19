@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ConsumerApp {
 
@@ -173,6 +174,40 @@ public class ConsumerApp {
         }
 
         log.info("Exiting the application");
+    }
+
+    public void consumeMessageWithManualCommit(List<String> topics) {
+        Properties properties = this.createConsumerProperties();
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false"); // disable auto commit of offsets
+        properties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "10"); // poll 10 records at a time
+        // create consumer
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+
+        // subscribe consumer to our topic(s)
+        consumer.subscribe(topics);
+
+        // poll new data
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            log.info("Received " + records.count() + " records");
+            for (ConsumerRecord<String, String> record : records) {
+                log.info("Key: " + record.key() + ", Value: " + record.value(),
+                        ", Partition: " + record.partition() + ", Offset: " + record.offset());
+                try {
+                    TimeUnit.MICROSECONDS.sleep(10L); // introduce a small delay
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            log.info("Committing offsets...");
+            consumer.commitSync();
+            log.info("Offsets have bean committed");
+            try {
+                TimeUnit.SECONDS.sleep(1L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

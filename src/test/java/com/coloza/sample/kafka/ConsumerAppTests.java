@@ -22,4 +22,9 @@ public class ConsumerAppTests {
 	public void consumeMessageAssignAndSeek() {
 		app.consumeMessageAssignAndSeek("first_topic", 10, 5);
 	}
+
+	@Test
+	public void consumeMessageWithManualCommit() {
+		app.consumeMessageWithManualCommit(Arrays.asList("first_topic"));
+	}
 }
