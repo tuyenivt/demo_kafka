@@ -1,6 +1,7 @@
 package com.coloza.sample.kafka;
 
 import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.record.CompressionType;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,6 +110,25 @@ public class ProducerApp {
         properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
         properties.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
         properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5"); // kafka >= 1.0
+
+        // create producer
+        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
+
+        // create a producer record
+        ProducerRecord<String, String> record = new ProducerRecord<>(topic, message);
+
+        // send data
+        producer.send(record);
+
+        producer.flush();
+        producer.close();
+    }
+
+    public void produceMessageWithHighThroughputProducer(String topic, String message) {
+        Properties properties = this.createProducerProperties();
+        properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, CompressionType.SNAPPY.name);
+        properties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20"); // 20ms
+        properties.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024)); // 32KB batch size
 
         // create producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);

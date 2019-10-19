@@ -28,4 +28,8 @@ public class ProducerAppTests {
 		app.produceMessageWithSafeProducer("first_topic", "hello world, i'm safe");
 	}
 
+	@Test
+	public void produceMessageWithHighThroughputProducer() {
+		app.produceMessageWithHighThroughputProducer("first_topic", "hello world, i'm fast");
+	}
 }
