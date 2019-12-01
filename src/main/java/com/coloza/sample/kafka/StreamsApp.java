@@ -21,7 +21,7 @@ public class StreamsApp {
     private Properties createStreamsProperties() {
         Properties properties = new Properties();
         properties.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, this.bootstrapServer);
-        properties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, this.bootstrapServer);
+        properties.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, this.applicationId);
         properties.setProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class.getName());
         properties.setProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.StringSerde.class.getName());
         return properties;
